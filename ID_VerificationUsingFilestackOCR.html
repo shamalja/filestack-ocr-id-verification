@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ID Verification with Filestack OCR</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      text-align: center;
+    }
+    #uploadedImage {
+      max-width: 100%;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      display: none;
+    }
+    #extractedText {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Automated ID Verification</h1>
+    <p>Select an ID image (passport, driver's license, etc.) to extract data for verification.</p>
+
+    <!-- File input for uploading the ID image -->
+    <input type="file" id="fileInput" accept="image/*">
+    <img id="uploadedImage" alt="Uploaded ID Image">
+    <div id="extractedText">Extracted text will appear here after upload.</div>
+  </div>
+
+  <!-- Include the Filestack JavaScript SDK -->
+  <script src="https://static.filestackapi.com/filestack-js/3.27.0/filestack.min.js"></script>
+
+  <script>
+    // Initialize Filestack client
+    const client = filestack.init('YOUR_API_KEY'); // Replace with your Filestack API key
+
+    // Function to upload the ID image and extract text with OCR
+    function uploadAndExtractText(file) {
+      client.upload(file)
+        .then(response => {
+          const fileHandle = response.handle;
+          console.log('File Handle:', fileHandle);
+
+          // Replace with your actual policy and signature
+          const policy = 'YOUR_POLICY'; // Generated Policy
+          const signature = 'YOUR_SIGNATURE'; // Generated Signature
+
+          // Construct the OCR URL with policy and signature
+          const ocrUrl = `https://cdn.filestackcontent.com/security=p:${policy},s:${signature}/ocr/${fileHandle}`;
+
+          // Display the uploaded image
+          const uploadedImage = document.getElementById('uploadedImage');
+          uploadedImage.src = `https://cdn.filestackcontent.com/${fileHandle}`;
+          uploadedImage.style.display = 'block';
+
+          // Fetch the OCR data from the transformation URL
+          fetch(ocrUrl)
+            .then(res => res.json())
+            .then(data => {
+              console.log('OCR Data:', data);
+              const extractedText = data.text || "No text found";
+
+              // Display the extracted text
+              document.getElementById('extractedText').innerText = 'Extracted Text:\n' + extractedText;
+            })
+            .catch(error => {
+              console.error('Error fetching OCR data:', error);
+              document.getElementById('extractedText').innerText = 'Error fetching OCR data.';
+            });
+        })
+        .catch(error => {
+          console.error('Error uploading image:', error);
+        });
+    }
+
+    // Event listener for file input
+    document.getElementById('fileInput').addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        uploadAndExtractText(file);
+      }
+    });
+  </script>
+</body>
+</html>
